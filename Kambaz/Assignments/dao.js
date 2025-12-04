@@ -1,49 +1,35 @@
 import { v4 as uuidv4 } from "uuid";
+import model from "./model.js";
 
-function AssignmentsDao(db) {
-	function findAssignmentsForCourse(courseId) {
-		const { assignments } = db;
-		return assignments.filter(
-			(assignment) => assignment.course === courseId
-		);
-	}
+export default function AssignmentsDao() {
+  async function findAssignmentsForCourse(courseId) {
+    return model.find({ course: courseId });
+  }
 
-	function createAssignment(assignment) {
-		const newAssignment = { ...assignment, _id: uuidv4() };
-		db.assignments = [...db.assignments, newAssignment];
-		return newAssignment;
-	}
+  async function findAssignmentById(assignmentId) {
+    return model.findById(assignmentId);
+  }
 
-	function deleteAssignment(assignmentId) {
-		const { assignments } = db;
-		db.assignments = assignments.filter(
-			(assignment) => assignment._id !== assignmentId
-		);
-	}
+  async function createAssignment(courseId, assignment) {
+    const newAssignment = { ...assignment, _id: uuidv4(), course: courseId };
+    const doc = await model.create(newAssignment);
+    return doc;
+  }
 
-	function updateAssignment(assignmentId, assignmentUpdates) {
-		const { assignments } = db;
-		const assignment = assignments.find(
-			(assignment) => assignment._id === assignmentId
-		);
-		Object.assign(assignment, assignmentUpdates);
-		return assignment;
-	}
+  async function deleteAssignment(assignmentId) {
+    return model.deleteOne({ _id: assignmentId });
+  }
 
-	function findAssignmentById(assignmentId) {
-		const { assignments } = db;
-		return assignments.find(
-			(assignment) => assignment._id === assignmentId
-		);
-	}
+  async function updateAssignment(assignmentId, assignmentUpdates) {
+    await model.updateOne({ _id: assignmentId }, { $set: assignmentUpdates });
+    return findAssignmentById(assignmentId);
+  }
 
-	return {
-		findAssignmentsForCourse,
-		createAssignment,
-		deleteAssignment,
-		updateAssignment,
-		findAssignmentById,
-	};
+  return {
+    findAssignmentsForCourse,
+    findAssignmentById,
+    createAssignment,
+    deleteAssignment,
+    updateAssignment,
+  };
 }
-
-export default AssignmentsDao;
